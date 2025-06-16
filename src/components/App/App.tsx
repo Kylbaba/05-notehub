@@ -2,7 +2,6 @@ import { useState } from "react";
 import { fetchNotes } from "../../services/noteService";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
-
 import NoteList from "../NoteList/NoteList";
 import NoteModal from "../NoteModal/NoteModal";
 import SearchBox from "../SearchBox/SearchBox";
@@ -17,11 +16,9 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [debounceSearchTerm] = useDebounce(searchTerm, 1000);
-  const perPage = 12;
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", debounceSearchTerm, currentPage],
-    queryFn: () => fetchNotes(currentPage, debounceSearchTerm, perPage),
+    queryFn: () => fetchNotes(debounceSearchTerm, currentPage), // перший аргумент — пошук
     placeholderData: keepPreviousData,
   });
 
@@ -33,6 +30,11 @@ export default function App() {
     setCurrentPage(1);
   };
 
+  //  явний обробник для пагінації
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
@@ -41,7 +43,7 @@ export default function App() {
           <Pagination
             currentPage={currentPage}
             pageCount={data.totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         )}
         <button className={css.button} onClick={openModal}>
